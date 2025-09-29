@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Header } from "@/components/Layout/Header";
 import { CompanySidebar } from "@/components/Layout/CompanySidebar";
 import { TaskList } from "@/components/Tasks/TaskList";
+import { ArchivedTasksList } from "@/components/Tasks/ArchivedTasksList";
 import { LoginForm } from "@/components/Auth/LoginForm";
 import { SettingsPage } from "@/components/Settings/SettingsPage";
 import { useAuth } from "@/hooks/useAuth";
@@ -13,32 +14,43 @@ const AppContent = () => {
   const [companies, setCompanies] = useState<any[]>([]);
   const [tasks, setTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showArchived, setShowArchived] = useState(false);
 
   const { user, profile, signOut } = useAuth();
 
   const fetchCompanies = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error }: any = await supabase
         .from('companies')
         .select(`
           id,
           name,
-          is_active,
-          tasks:tasks(count)
+          is_active
         `)
         .eq('is_active', true)
         .order('name');
 
       if (error) throw error;
-      
-      const companiesWithTaskCount = data?.map(company => ({
-        id: company.id,
-        name: company.name,
-        taskCount: company.tasks?.[0]?.count || 0,
-        isActive: company.is_active
-      })) || [];
 
-      setCompanies(companiesWithTaskCount);
+      // Buscar contagem de tarefas não arquivadas para cada empresa
+      const companiesWithCount = await Promise.all(
+        (data || []).map(async (company: any) => {
+          const { count }: any = await supabase
+            .from('tasks')
+            .select('*', { count: 'exact', head: true })
+            .eq('company_id', company.id)
+            .eq('is_archived', false);
+
+          return {
+            id: company.id,
+            name: company.name,
+            taskCount: count || 0,
+            isActive: company.is_active
+          };
+        })
+      );
+
+      setCompanies(companiesWithCount);
     } catch (error) {
       console.error('Error fetching companies:', error);
     }
@@ -46,21 +58,14 @@ const AppContent = () => {
 
   const fetchTasks = async () => {
     try {
-      let query = supabase
-        .from('tasks')
-        .select(`
-          *,
-          company:companies(name),
-          comments:task_comments(count),
-          attachments:task_attachments(count)
-        `)
-        .order('created_at', { ascending: false });
-
-      const { data, error } = await query;
+      const query = supabase.from('tasks').select('*, company:companies(name), comments:task_comments(count), attachments:task_attachments(count)');
+      
+      // @ts-ignore
+      const { data, error } = await query.eq('is_archived', false).order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      const formattedTasks = data?.map(task => ({
+      const formattedTasks = data?.map((task: any) => ({
         id: task.id,
         title: task.title,
         description: task.description,
@@ -73,6 +78,7 @@ const AppContent = () => {
         company_id: task.company_id,
         createdBy: 'Usuário',
         createdAt: new Date(task.created_at).toLocaleDateString('pt-BR'),
+        is_archived: task.is_archived,
       })) || [];
 
       setTasks(formattedTasks);
@@ -95,6 +101,28 @@ const AppContent = () => {
       if (profile.user_type === 'company_user' && profile.company_id) {
         setSelectedCompany(profile.company_id);
       }
+
+      // Configurar realtime para atualizar números automaticamente
+      const channel = supabase
+        .channel('tasks-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'tasks'
+          },
+          () => {
+            // Atualizar companies e tasks quando houver mudanças
+            fetchCompanies();
+            fetchTasks();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [user, profile]);
 
@@ -140,17 +168,29 @@ const AppContent = () => {
         <CompanySidebar
           companies={visibleCompanies}
           selectedCompany={selectedCompany}
-          onCompanySelect={setSelectedCompany}
+          onCompanySelect={(id) => {
+            setSelectedCompany(id);
+            setShowArchived(false);
+          }}
+          onShowArchived={() => setShowArchived(!showArchived)}
+          showArchived={showArchived}
         />
         
         <main className="flex-1">
-          {activeTab === "chamados" && (
+          {activeTab === "chamados" && !showArchived && (
             <TaskList
               tasks={visibleTasks}
               companies={companies}
               selectedCompany={selectedCompany}
               onTasksChange={fetchTasks}
               userType={profile.user_type}
+            />
+          )}
+
+          {activeTab === "chamados" && showArchived && (
+            <ArchivedTasksList
+              companyId={selectedCompany}
+              onClose={() => setShowArchived(false)}
             />
           )}
           
