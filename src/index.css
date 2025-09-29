@@ -1,0 +1,145 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Sistema de Gestão de Tarefas - Design System
+   Cores inspiradas na interface com tons laranja/amarelo
+   Todas as cores são HSL para consistência */
+
+@layer base {
+  :root {
+    /* Background e texto base */
+    --background: 210 15% 95%;
+    --foreground: 25 25% 15%;
+
+    /* Cards e superfícies */
+    --card: 0 0% 100%;
+    --card-foreground: 25 25% 15%;
+
+    /* Popover */
+    --popover: 0 0% 100%;
+    --popover-foreground: 25 25% 15%;
+
+    /* Primário - Laranja vibrante do sistema */
+    --primary: 38 95% 58%;
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 38 95% 48%;
+
+    /* Secundário - Tom mais suave */
+    --secondary: 45 100% 85%;
+    --secondary-foreground: 25 25% 15%;
+    --secondary-hover: 45 100% 75%;
+
+    /* Menu lateral */
+    --sidebar-bg: 210 25% 88%;
+    --sidebar-item: 0 0% 100%;
+    --sidebar-item-active: 38 95% 58%;
+    --sidebar-text: 25 25% 25%;
+
+    /* Estados e feedback */
+    --muted: 210 20% 90%;
+    --muted-foreground: 25 15% 45%;
+
+    --accent: 38 95% 88%;
+    --accent-foreground: 25 25% 15%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Bordas e inputs */
+    --border: 210 20% 85%;
+    --input: 210 20% 92%;
+    --ring: 38 95% 58%;
+
+    /* Status das tarefas */
+    --status-open: 38 95% 58%;
+    --status-progress: 45 85% 55%;
+    --status-completed: 142 76% 36%;
+    --status-priority-high: 0 84% 60%;
+    --status-priority-medium: 38 95% 58%;
+    --status-priority-low: 142 76% 36%;
+
+    /* Gradientes */
+    --gradient-primary: linear-gradient(135deg, hsl(38, 95%, 58%), hsl(45, 100%, 65%));
+    --gradient-card: linear-gradient(135deg, hsl(38, 95%, 88%), hsl(45, 100%, 92%));
+    --gradient-sidebar: linear-gradient(180deg, hsl(210, 25%, 88%), hsl(210, 25%, 92%));
+
+    /* Sombras */
+    --shadow-card: 0 4px 12px hsl(38, 95%, 58% / 0.15);
+    --shadow-elevated: 0 8px 24px hsl(38, 95%, 58% / 0.2);
+
+    /* Raio dos elementos */
+    --radius: 12px;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    /* Dark mode com tons mais escuros mantendo a identidade laranja */
+    --background: 25 15% 8%;
+    --foreground: 45 25% 92%;
+
+    --card: 25 15% 12%;
+    --card-foreground: 45 25% 92%;
+
+    --popover: 25 15% 12%;
+    --popover-foreground: 45 25% 92%;
+
+    --primary: 38 95% 58%;
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 38 95% 68%;
+
+    --secondary: 25 20% 18%;
+    --secondary-foreground: 45 25% 92%;
+    --secondary-hover: 25 20% 22%;
+
+    --sidebar-bg: 25 20% 15%;
+    --sidebar-item: 25 15% 20%;
+    --sidebar-item-active: 38 95% 58%;
+    --sidebar-text: 45 25% 82%;
+
+    --muted: 25 15% 18%;
+    --muted-foreground: 45 15% 65%;
+
+    --accent: 25 20% 18%;
+    --accent-foreground: 45 25% 92%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 25 15% 22%;
+    --input: 25 15% 18%;
+    --ring: 38 95% 58%;
+
+    --gradient-primary: linear-gradient(135deg, hsl(38, 95%, 58%), hsl(45, 100%, 65%));
+    --gradient-card: linear-gradient(135deg, hsl(25, 15%, 12%), hsl(25, 20%, 16%));
+    --gradient-sidebar: linear-gradient(180deg, hsl(25, 20%, 15%), hsl(25, 15%, 12%));
+
+    --shadow-card: 0 4px 12px hsl(0, 0%, 0% / 0.3);
+    --shadow-elevated: 0 8px 24px hsl(0, 0%, 0% / 0.4);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
