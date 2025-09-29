@@ -1,6 +1,5 @@
-import { Building2, Users, Archive } from "lucide-react";
+import { Building2, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 
 interface Company {
   id: string;
@@ -13,16 +12,12 @@ interface CompanySidebarProps {
   companies: Company[];
   selectedCompany: string | null;
   onCompanySelect: (companyId: string) => void;
-  onShowArchived: () => void;
-  showArchived: boolean;
 }
 
 export const CompanySidebar = ({ 
   companies, 
   selectedCompany, 
-  onCompanySelect,
-  onShowArchived,
-  showArchived
+  onCompanySelect 
 }: CompanySidebarProps) => {
   return (
     <aside className="w-64 bg-gradient-sidebar border-r border-border shadow-card">
@@ -31,15 +26,6 @@ export const CompanySidebar = ({
           <Users className="w-5 h-5 text-sidebar-text" />
           <h2 className="text-lg font-semibold text-sidebar-text">Empresas</h2>
         </div>
-
-        <Button
-          variant={showArchived ? "default" : "outline"}
-          className="w-full mb-4 justify-start"
-          onClick={onShowArchived}
-        >
-          <Archive className="w-4 h-4 mr-2" />
-          Tarefas Arquivadas
-        </Button>
 
         <div className="space-y-2">
           {companies.map((company) => {

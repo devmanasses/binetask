@@ -24,7 +24,6 @@ interface Task {
   company_id: string;
   createdBy: string;
   createdAt: string;
-  is_archived?: boolean;
 }
 
 interface TaskCardProps {
@@ -67,38 +66,24 @@ export const TaskCard = ({
   
   const StatusIcon = statusConfig[task.status as keyof typeof statusConfig]?.icon || AlertCircle;
 
-  // Tarefas arquivadas não podem ser editadas
-  const isArchived = task.is_archived === true;
-  const canEdit = !isArchived && (profile?.user_type === 'admin' || 
-    (profile?.user_type === 'company_user' && profile.company_id === task.company_id));
+  const canEdit = profile?.user_type === 'admin' || 
+    (profile?.user_type === 'company_user' && profile.company_id === task.company_id);
 
   const updateTaskStatus = async (newStatus: string) => {
-    if (!canEdit || isArchived) return;
+    if (!canEdit) return;
     
     setUpdating(true);
     try {
-      const updateData: any = { 
-        status: newStatus as 'open' | 'progress' | 'completed' 
-      };
-      
-      // Se marcar como concluída, arquivar automaticamente
-      if (newStatus === 'completed') {
-        updateData.is_archived = true;
-        updateData.archived_at = new Date().toISOString();
-      }
-
       const { error } = await supabase
         .from('tasks')
-        .update(updateData)
+        .update({ status: newStatus as 'open' | 'progress' | 'completed' })
         .eq('id', task.id);
 
       if (error) throw error;
 
       toast({
-        title: newStatus === 'completed' ? "Tarefa concluída e arquivada" : "Status atualizado",
-        description: newStatus === 'completed' 
-          ? "A tarefa foi concluída e movida para arquivados."
-          : "O status da tarefa foi atualizado com sucesso!",
+        title: "Status atualizado",
+        description: "O status da tarefa foi atualizado com sucesso!",
       });
 
       onTaskChange();
@@ -115,7 +100,7 @@ export const TaskCard = ({
   };
 
   const updateTaskPriority = async (newPriority: string) => {
-    if (profile?.user_type !== 'admin' || isArchived) return;
+    if (profile?.user_type !== 'admin') return;
     
     setUpdating(true);
     try {
@@ -145,7 +130,7 @@ export const TaskCard = ({
   };
   
   return (
-    <Card className={`bg-gradient-card shadow-card hover:shadow-elevated transition-all duration-300 border-0 ${isArchived ? 'opacity-75' : ''}`}>
+    <Card className="bg-gradient-card shadow-card hover:shadow-elevated transition-all duration-300 border-0">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex-1">
