@@ -6,7 +6,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Building, Users } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Plus, Building, Users, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -20,6 +22,7 @@ interface Company {
 
 interface Profile {
   id: string;
+  user_id: string;
   name: string;
   email: string;
   user_type: string;
@@ -40,7 +43,7 @@ export const SettingsPage = () => {
     email: "",
     password: "",
     user_type: "company_user" as "admin" | "company_user",
-    company_id: "",
+    company_ids: [] as string[],
   });
 
   // Estados para dialogs
@@ -127,6 +130,57 @@ export const SettingsPage = () => {
     }
   };
 
+  const handleDeleteCompany = async (companyId: string) => {
+    try {
+      const { error } = await supabase
+        .from('companies')
+        .delete()
+        .eq('id', companyId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Empresa excluída",
+        description: "A empresa foi excluída com sucesso!",
+      });
+
+      fetchCompanies();
+    } catch (error) {
+      console.error('Error deleting company:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao excluir empresa. Tente novamente.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    try {
+      // Primeiro deletar o perfil, o que também deletará o usuário por cascade
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('user_id', userId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Usuário excluído",
+        description: "O usuário foi excluído com sucesso!",
+      });
+
+      fetchProfiles();
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao excluir usuário. Tente novamente.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormLoading(true);
@@ -147,17 +201,27 @@ export const SettingsPage = () => {
       if (authError) throw authError;
 
       if (authData.user) {
-        // Atualizar perfil com empresa se necessário
-        if (userForm.company_id) {
-          const { error: profileError } = await supabase
-            .from('profiles')
-            .update({ 
-              company_id: userForm.company_id,
-              user_type: userForm.user_type 
-            })
-            .eq('user_id', authData.user.id);
+        // Atualizar perfil com tipo de usuário
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({ user_type: userForm.user_type })
+          .eq('user_id', authData.user.id);
 
-          if (profileError) throw profileError;
+        if (profileError) throw profileError;
+
+        // Adicionar associações com empresas se for usuário de empresa
+        if (userForm.user_type === 'company_user' && userForm.company_ids.length > 0) {
+          const associations = userForm.company_ids.map(company_id => ({
+            user_id: authData.user!.id,
+            company_id
+          }));
+
+          // @ts-ignore - user_companies table will be created via migration
+          const { error: associationError } = await (supabase as any)
+            .from('user_companies')
+            .insert(associations);
+
+          if (associationError) throw associationError;
         }
       }
 
@@ -171,7 +235,7 @@ export const SettingsPage = () => {
         email: "",
         password: "",
         user_type: "company_user",
-        company_id: "",
+        company_ids: [],
       });
       setUserDialogOpen(false);
       fetchProfiles();
@@ -267,10 +331,36 @@ export const SettingsPage = () => {
             {companies.map((company) => (
               <Card key={company.id}>
                 <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center space-x-2">
-                    <Building className="w-5 h-5" />
-                    <span>{company.name}</span>
-                  </CardTitle>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center space-x-2">
+                      <Building className="w-5 h-5" />
+                      <span>{company.name}</span>
+                    </CardTitle>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive">
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Excluir Empresa</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Tem certeza que deseja excluir a empresa "{company.name}"? Esta ação não pode ser desfeita.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDeleteCompany(company.id)}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            Excluir
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <div className="text-sm text-muted-foreground">
@@ -347,23 +437,36 @@ export const SettingsPage = () => {
                   </div>
                   {userForm.user_type === 'company_user' && (
                     <div className="space-y-2">
-                      <Label htmlFor="user-company">Empresa</Label>
-                      <Select 
-                        value={userForm.company_id} 
-                        onValueChange={(value) => setUserForm({ ...userForm, company_id: value })}
-                        required
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione uma empresa" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {companies.map((company) => (
-                            <SelectItem key={company.id} value={company.id}>
+                      <Label>Empresas</Label>
+                      <div className="border rounded-md p-4 space-y-2 max-h-48 overflow-y-auto">
+                        {companies.map((company) => (
+                          <div key={company.id} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`company-${company.id}`}
+                              checked={userForm.company_ids.includes(company.id)}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setUserForm({
+                                    ...userForm,
+                                    company_ids: [...userForm.company_ids, company.id]
+                                  });
+                                } else {
+                                  setUserForm({
+                                    ...userForm,
+                                    company_ids: userForm.company_ids.filter(id => id !== company.id)
+                                  });
+                                }
+                              }}
+                            />
+                            <Label
+                              htmlFor={`company-${company.id}`}
+                              className="text-sm font-normal cursor-pointer"
+                            >
                               {company.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
                   <div className="flex justify-end space-x-2">
@@ -383,10 +486,36 @@ export const SettingsPage = () => {
             {profiles.map((profile) => (
               <Card key={profile.id}>
                 <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center space-x-2">
-                    <Users className="w-5 h-5" />
-                    <span>{profile.name}</span>
-                  </CardTitle>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center space-x-2">
+                      <Users className="w-5 h-5" />
+                      <span>{profile.name}</span>
+                    </CardTitle>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive">
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Excluir Usuário</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Tem certeza que deseja excluir o usuário "{profile.name}"? Esta ação não pode ser desfeita.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDeleteUser(profile.user_id)}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            Excluir
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <div className="text-sm text-muted-foreground space-y-1">
