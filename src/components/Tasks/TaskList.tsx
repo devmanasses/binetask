@@ -76,13 +76,17 @@ export const TaskList = ({
     completed: filteredTasks.filter(t => t.status === "completed").length,
   };
 
+  const selectedCompanyName = selectedCompany 
+    ? companies.find(c => c.id === selectedCompany)?.name 
+    : null;
+
   return (
     <div className="flex-1 p-6">
       {/* Header com estatísticas */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-4">
           <h2 className="text-2xl font-bold text-foreground">
-            {selectedCompany ? `Tarefas - ${selectedCompany}` : "Todas as Tarefas"}
+            {selectedCompanyName ? `Tarefas - ${selectedCompanyName}` : "Todas as Tarefas"}
           </h2>
           
           <div className="flex items-center space-x-2">
@@ -131,8 +135,8 @@ export const TaskList = ({
               Nenhuma tarefa encontrada
             </h3>
             <p className="text-muted-foreground">
-              {selectedCompany 
-                ? `Não há tarefas para ${selectedCompany}` 
+              {selectedCompanyName 
+                ? `Não há tarefas para ${selectedCompanyName}` 
                 : "Não há tarefas cadastradas no sistema"
               }
             </p>
