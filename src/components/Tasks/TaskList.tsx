@@ -51,20 +51,22 @@ export const TaskList = ({
   // Apply filters
   let filteredTasks = tasks;
 
-  // Filter by selected company first
-  if (selectedCompany && userType === 'admin') {
-    filteredTasks = filteredTasks.filter(task => task.company_id === selectedCompany);
-  }
-
-  // Apply additional filters
+  // Apply status filter
   if (filters.status) {
     filteredTasks = filteredTasks.filter(task => task.status === filters.status);
   }
+  
+  // Apply priority filter
   if (filters.priority) {
     filteredTasks = filteredTasks.filter(task => task.priority === filters.priority);
   }
-  if (filters.company && userType === 'admin') {
-    filteredTasks = filteredTasks.filter(task => task.company_id === filters.company);
+  
+  // Apply company filter - priority to dropdown filter if set, otherwise use sidebar selection
+  if (userType === 'admin') {
+    const companyFilter = filters.company || selectedCompany;
+    if (companyFilter) {
+      filteredTasks = filteredTasks.filter(task => task.company_id === companyFilter);
+    }
   }
 
   const taskStats = {
