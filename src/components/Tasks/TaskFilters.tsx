@@ -25,9 +25,9 @@ export const TaskFilters = ({ onFiltersChange, companies, showCompanyFilter = tr
     const newFilters = { ...filters, [key]: value };
     setFilters(newFilters);
     
-    // Remove empty filters
+    // Remove empty filters and "all" values
     const cleanFilters = Object.entries(newFilters).reduce((acc, [k, v]) => {
-      if (v) acc[k as keyof typeof acc] = v;
+      if (v && v !== 'all') acc[k as keyof typeof acc] = v;
       return acc;
     }, {} as { status?: string; priority?: string; company?: string });
     
@@ -72,7 +72,7 @@ export const TaskFilters = ({ onFiltersChange, companies, showCompanyFilter = tr
                   <SelectValue placeholder="Todos os status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos os status</SelectItem>
+                  <SelectItem value="all">Todos os status</SelectItem>
                   <SelectItem value="open">Aberto</SelectItem>
                   <SelectItem value="progress">Em Andamento</SelectItem>
                   <SelectItem value="completed">Concluído</SelectItem>
@@ -87,7 +87,7 @@ export const TaskFilters = ({ onFiltersChange, companies, showCompanyFilter = tr
                   <SelectValue placeholder="Todas as prioridades" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todas as prioridades</SelectItem>
+                  <SelectItem value="all">Todas as prioridades</SelectItem>
                   <SelectItem value="high">Alta</SelectItem>
                   <SelectItem value="medium">Média</SelectItem>
                   <SelectItem value="low">Baixa</SelectItem>
@@ -103,7 +103,7 @@ export const TaskFilters = ({ onFiltersChange, companies, showCompanyFilter = tr
                     <SelectValue placeholder="Todas as empresas" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todas as empresas</SelectItem>
+                    <SelectItem value="all">Todas as empresas</SelectItem>
                     {companies.map((company) => (
                       <SelectItem key={company.id} value={company.id}>
                         {company.name}
