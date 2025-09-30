@@ -14,215 +14,16 @@ export type Database = {
   }
   public: {
     Tables: {
-      companies: {
-        Row: {
-          created_at: string
-          id: string
-          is_active: boolean
-          name: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          is_active?: boolean
-          name: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          is_active?: boolean
-          name?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      profiles: {
-        Row: {
-          company_id: string | null
-          created_at: string
-          email: string
-          id: string
-          is_active: boolean
-          name: string
-          updated_at: string
-          user_id: string
-          user_type: Database["public"]["Enums"]["user_type"]
-        }
-        Insert: {
-          company_id?: string | null
-          created_at?: string
-          email: string
-          id?: string
-          is_active?: boolean
-          name: string
-          updated_at?: string
-          user_id: string
-          user_type?: Database["public"]["Enums"]["user_type"]
-        }
-        Update: {
-          company_id?: string | null
-          created_at?: string
-          email?: string
-          id?: string
-          is_active?: boolean
-          name?: string
-          updated_at?: string
-          user_id?: string
-          user_type?: Database["public"]["Enums"]["user_type"]
-        }
-        Relationships: [
-          {
-            foreignKeyName: "profiles_company_id_fkey"
-            columns: ["company_id"]
-            isOneToOne: false
-            referencedRelation: "companies"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      task_attachments: {
-        Row: {
-          content_type: string | null
-          created_at: string
-          file_path: string
-          file_size: number | null
-          filename: string
-          id: string
-          task_id: string
-          user_id: string
-        }
-        Insert: {
-          content_type?: string | null
-          created_at?: string
-          file_path: string
-          file_size?: number | null
-          filename: string
-          id?: string
-          task_id: string
-          user_id: string
-        }
-        Update: {
-          content_type?: string | null
-          created_at?: string
-          file_path?: string
-          file_size?: number | null
-          filename?: string
-          id?: string
-          task_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "task_attachments_task_id_fkey"
-            columns: ["task_id"]
-            isOneToOne: false
-            referencedRelation: "tasks"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      task_comments: {
-        Row: {
-          comment: string
-          created_at: string
-          id: string
-          task_id: string
-          user_id: string
-        }
-        Insert: {
-          comment: string
-          created_at?: string
-          id?: string
-          task_id: string
-          user_id: string
-        }
-        Update: {
-          comment?: string
-          created_at?: string
-          id?: string
-          task_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "task_comments_task_id_fkey"
-            columns: ["task_id"]
-            isOneToOne: false
-            referencedRelation: "tasks"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      tasks: {
-        Row: {
-          assigned_to: string | null
-          company_id: string
-          created_at: string
-          created_by: string
-          description: string | null
-          due_date: string | null
-          id: string
-          priority: Database["public"]["Enums"]["task_priority"]
-          status: Database["public"]["Enums"]["task_status"]
-          title: string
-          updated_at: string
-        }
-        Insert: {
-          assigned_to?: string | null
-          company_id: string
-          created_at?: string
-          created_by: string
-          description?: string | null
-          due_date?: string | null
-          id?: string
-          priority?: Database["public"]["Enums"]["task_priority"]
-          status?: Database["public"]["Enums"]["task_status"]
-          title: string
-          updated_at?: string
-        }
-        Update: {
-          assigned_to?: string | null
-          company_id?: string
-          created_at?: string
-          created_by?: string
-          description?: string | null
-          due_date?: string | null
-          id?: string
-          priority?: Database["public"]["Enums"]["task_priority"]
-          status?: Database["public"]["Enums"]["task_status"]
-          title?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "tasks_company_id_fkey"
-            columns: ["company_id"]
-            isOneToOne: false
-            referencedRelation: "companies"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
+      [_ in never]: never
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      get_user_company: {
-        Args: { user_id: string }
-        Returns: string
-      }
-      is_admin: {
-        Args: { user_id: string }
-        Returns: boolean
-      }
+      [_ in never]: never
     }
     Enums: {
-      task_priority: "high" | "medium" | "low"
-      task_status: "open" | "progress" | "completed"
-      user_type: "admin" | "company_user"
+      [_ in never]: never
     }
     CompositeTypes: {
       [_ in never]: never
@@ -349,10 +150,6 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {
-      task_priority: ["high", "medium", "low"],
-      task_status: ["open", "progress", "completed"],
-      user_type: ["admin", "company_user"],
-    },
+    Enums: {},
   },
 } as const
